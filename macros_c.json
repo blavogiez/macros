@@ -1,0 +1,14 @@
+{
+  "f1": { "type": "text", "value": "printf(\"\");" },
+  "f2": { "type": "text", "value": "int main(int argc, char *argv[]) {\n\t\n\treturn 0;\n}" },
+  "f3": { "type": "text", "value": "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <stdbool.h>\n#include <stdint.h>\n#include <math.h>\n#include <time.h>\n#include <ctype.h>" },
+  "f4": { "type": "text", "value": "for (int i = 0; i < ; i++) {\n\t\n}" },
+  "f5": { "type": "text", "value": "while () {\n\t\n}" },
+  "f6": { "type": "text", "value": "if () {\n\t\n}" },
+  "f7": { "type": "text", "value": "typedef struct {\n\t\n} ;" },
+  "f8": { "type": "text", "value": "void () {\n\t\n}" },
+  "f9": { "type": "text", "value": " = malloc(sizeof());\nif ( == NULL) {\n\tfprintf(stderr, \"Erreur allocation\\n\");\n\texit(1);\n}\nfree();" },
+  "f10": { "type": "text", "value": "switch () {\n\tcase :\n\t\t\n\t\tbreak;\n\tdefault:\n\t\t\n\t\tbreak;\n}" },
+  "f11": { "type": "text", "value": "#ifndef _H\n#define _H\n\n\n#endif" },
+  "f12": { "type": "text", "value": "typedef  ;" }
+}
