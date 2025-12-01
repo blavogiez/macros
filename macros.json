@@ -1,0 +1,25 @@
+{
+  "f1": { "type": "text", "value": "openlatex.github.io" },
+
+  "f2": {
+    "type": "text",
+    "value": "https://docs.google.com/spreadsheets/d/1QZjU4ci6VN_G1Fg_ptgfiZC6DO4tUSaNHSs0UvCLbN8/edit?gid=137456825#gid=137456825"
+  },
+
+  "f3": {
+    "type": "command",
+    "value": "bash -c 'cd ~/Documents/BUT2/Semestre1/Ressources && gnome-terminal -- bash -c \"echo Aller dans quel dossier ? ; read REP ; cd \\\"$REP\\\" 2>/dev/null || echo Dossier introuvable ; bash\"' "
+  },
+
+  "f4": {
+    "type": "command",
+    "value": "gnome-screenshot -a"
+  },
+
+  "f5": { "type": "text", "value": "sudo apt update && sudo apt upgrade" },
+
+  "f6": {
+    "type": "command",
+    "value": "gnome-terminal"
+  }
+}

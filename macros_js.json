@@ -1,0 +1,14 @@
+{
+  "f1": { "type": "text", "value": "console.log();" },
+  "f2": { "type": "text", "value": "const  = () => {\n\t\n};" },
+  "f3": { "type": "text", "value": "async function () {\n\ttry {\n\t\tconst result = await ;\n\t\treturn result;\n\t} catch (error) {\n\t\tconsole.error(error);\n\t}\n}" },
+  "f4": { "type": "text", "value": "const  = require('');" },
+  "f5": { "type": "text", "value": "import  from '';" },
+  "f6": { "type": "text", "value": "document.querySelector('')" },
+  "f7": { "type": "text", "value": "document.getElementById('')" },
+  "f8": { "type": "text", "value": ".addEventListener('click', () => {\n\t\n});" },
+  "f9": { "type": "text", "value": ".forEach((item) => {\n\t\n});" },
+  "f10": { "type": "text", "value": ".map((item) => {\n\t\n});" },
+  "f11": { "type": "text", "value": "if ( === null || === undefined) {\n\t\n}" },
+  "f12": { "type": "text", "value": "export default ;" }
+}
