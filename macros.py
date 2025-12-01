@@ -151,14 +151,14 @@ def main():
     root_window.withdraw()
 
     print("=== Macros F1-F12 ===")
-    print("²+& : Sélectionner le contexte / Quitter")
+    print("Ctrl+² : Sélectionner le contexte / Quitter")
     print("Types d'actions supportés : text, keys, command\n")
 
     reload_config()
 
     function_keys = [f"f{i}" for i in range(1, 13)]
 
-    keyboard.add_hotkey('²+&', request_context_selector, suppress=True)
+    keyboard.add_hotkey('Ctrl+²', request_context_selector, suppress=True)
 
     for fk in function_keys:
         keyboard.add_hotkey(fk, lambda fk=fk: run_macro(fk, config), suppress=True)
