@@ -1,0 +1,14 @@
+{
+  "f1": { "type": "text", "value": "System.out.println(" },
+  "f2": { "type": "text", "value": "public static void main(String[] args) {\n\t" },
+  "f3": { "type": "text", "value": "import java.util.*;" },
+  "f4": { "type": "text", "value": "import static org.junit.jupiter.api.Assertions.*;" },
+  "f5": { "type": "text", "value": "import static org.junit.jupiter.api.*;" },
+  "f6": { "type": "text", "value": "public void " },
+  "f7": { "type": "text", "value": "private void " },
+  "f8": { "type": "text", "value": "for (int i = 0; i < ; i++) {\n\t" },
+  "f9": { "type": "text", "value": "List<> list = new ArrayList<>();" },
+  "f10": { "type": "text", "value": "Map<, > map = new HashMap<>();" },
+  "f11": { "type": "text", "value": "if () {\n\t" },
+  "f12": { "type": "text", "value": "Scanner scanner = new Scanner(System.in);" }
+}

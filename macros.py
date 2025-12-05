@@ -4,19 +4,151 @@ import subprocess
 import sys
 import tkinter as tk
 from tkinter import messagebox
-import keyboard
 import queue
 import threading
-import pyperclip
 import time
 
-DEFAULT_CONFIG = "macros.json"
+# ===== Détection automatique de la bibliothèque de clavier =====
+KEYBOARD_LIB = None
+pynput_controller = None
+pynput_listener = None
+pynput_hotkeys = {}
+pynput_current_keys = set()
+
+try:
+    import keyboard
+    KEYBOARD_LIB = 'keyboard'
+    print("[INFO] Utilisation de 'keyboard' (recommandé pour Windows)")
+except ImportError:
+    try:
+        from pynput import keyboard as pynput_kb
+        from pynput.keyboard import Key, Controller, Listener, KeyCode
+        KEYBOARD_LIB = 'pynput'
+        pynput_controller = Controller()
+        print("[INFO] Utilisation de 'pynput' (recommandé pour Linux)")
+    except ImportError:
+        print("[ERREUR] Aucune bibliothèque de clavier disponible")
+        print("\nSur Windows:")
+        print("  pip install keyboard")
+        print("\nSur Linux (avec venv):")
+        print("  python3 -m venv venv")
+        print("  source venv/bin/activate")
+        print("  pip install pynput")
+        sys.exit(1)
+
+# Gestion optionnelle de pyperclip
+try:
+    import pyperclip
+except ImportError:
+    print("[WARNING] pyperclip non disponible (presse-papiers désactivé)")
+    class MockPyperclip:
+        def copy(self, text): pass
+        def paste(self): return ""
+    pyperclip = MockPyperclip()
+
+# ===== Wrapper functions pour abstraction keyboard/pynput =====
+
+def write_text(text):
+    """Insère du texte, compatible keyboard et pynput"""
+    if KEYBOARD_LIB == 'keyboard':
+        keyboard.write(text)
+    elif KEYBOARD_LIB == 'pynput':
+        pynput_controller.type(text)
+
+def send_keys(keys):
+    """Envoie des raccourcis clavier, compatible keyboard et pynput"""
+    if KEYBOARD_LIB == 'keyboard':
+        keyboard.send(keys)
+    elif KEYBOARD_LIB == 'pynput':
+        # Pour pynput, on doit parser et exécuter les touches
+        # Exemples: 'ctrl+c', 'alt+tab', etc.
+        print(f"[WARNING] send_keys('{keys}') non implémenté pour pynput")
+
+def normalize_key_name(key_name):
+    """Normalise le nom d'une touche pour pynput"""
+    key_name = key_name.lower()
+
+    # Mapping des touches fonction
+    if key_name.startswith('f') and key_name[1:].isdigit():
+        # F1-F12
+        num = int(key_name[1:])
+        return KeyCode.from_vk(111 + num)  # VK_F1 = 112, donc F1 = 111+1
+
+    # Touches spéciales
+    special_keys = {
+        'ctrl': Key.ctrl,
+        'control': Key.ctrl,
+        'alt': Key.alt,
+        'shift': Key.shift,
+        'enter': Key.enter,
+        'space': Key.space,
+        'tab': Key.tab,
+        'esc': Key.esc,
+        'escape': Key.esc,
+    }
+
+    if key_name in special_keys:
+        return special_keys[key_name]
+
+    # Caractère simple
+    if len(key_name) == 1:
+        return KeyCode.from_char(key_name)
+
+    # Essayer de trouver la touche dans Key
+    try:
+        return getattr(Key, key_name)
+    except AttributeError:
+        return KeyCode.from_char(key_name)
+
+def on_pynput_press(key):
+    """Callback appelé quand une touche est pressée (pynput)"""
+    try:
+        # Ajoute la touche aux touches actuellement pressées
+        pynput_current_keys.add(key)
+
+        # Vérifie les hotkeys
+        for hotkey_combo, callback in pynput_hotkeys.items():
+            if hotkey_combo <= pynput_current_keys:
+                callback()
+    except Exception as e:
+        print(f"[ERROR] on_pynput_press: {e}")
+
+def on_pynput_release(key):
+    """Callback appelé quand une touche est relâchée (pynput)"""
+    try:
+        pynput_current_keys.discard(key)
+    except Exception as e:
+        print(f"[ERROR] on_pynput_release: {e}")
+
+def add_hotkey(key_combo, callback, suppress=False):
+    """Enregistre un raccourci clavier, compatible keyboard et pynput"""
+    if KEYBOARD_LIB == 'keyboard':
+        keyboard.add_hotkey(key_combo, callback, suppress=suppress)
+    elif KEYBOARD_LIB == 'pynput':
+        # Parse le combo (ex: "ctrl+²", "f1")
+        keys = key_combo.lower().split('+')
+        key_set = set()
+
+        for k in keys:
+            k = k.strip()
+            normalized = normalize_key_name(k)
+            if normalized:
+                key_set.add(normalized)
+
+        if key_set:
+            pynput_hotkeys[frozenset(key_set)] = callback
+            print(f"[DEBUG] Hotkey enregistré: {key_combo}")
+
+DEFAULT_CONFIG = "macros/macros.json"
 current_config_file = DEFAULT_CONFIG
 config = {}
 root_window = None
 action_queue = queue.Queue()
 
 def load_config(path):
+    # Si le chemin ne commence pas par "macros/", l'ajouter
+    if not path.startswith("macros/"):
+        path = f"macros/{path}"
     with open(path, "r", encoding="utf-8") as f:
         try:
             data = json.load(f)
@@ -307,10 +439,10 @@ def run_macro(key_name, cfg):
     print(f"[DEBUG] Macro déclenchée: {key_name} -> {action_type} : {value}")
 
     if action_type == "text":
-        keyboard.write(value)
+        write_text(value)
 
     elif action_type == "keys":
-        keyboard.send(value)
+        send_keys(value)
 
     elif action_type == "command":
         try:
@@ -324,26 +456,39 @@ def run_macro(key_name, cfg):
         print(f"[!] Type d'action inconnu pour {key_name}: {action_type}")
 
 def main():
-    global config, root_window
+    global config, root_window, pynput_listener
 
     root_window = tk.Tk()
     root_window.withdraw()
 
     print("=== Macros F1-F12 ===")
     print("Ctrl+² : Sélectionner le contexte / Quitter / Aide")
+    print(f"Bibliothèque utilisée : {KEYBOARD_LIB}")
     print("Types d'actions supportés : text, keys, command\n")
 
     reload_config()
 
     function_keys = [f"f{i}" for i in range(1, 13)]
 
-    keyboard.add_hotkey('Ctrl+²', request_context_selector, suppress=True)
+    # Enregistrer Ctrl+²
+    add_hotkey('Ctrl+²', request_context_selector, suppress=True)
 
+    # Enregistrer F1-F12
     for fk in function_keys:
-        keyboard.add_hotkey(fk, lambda fk=fk: run_macro(fk, config), suppress=True)
+        add_hotkey(fk, lambda fk=fk: run_macro(fk, config), suppress=True)
+
+    # Si pynput, démarrer le listener
+    if KEYBOARD_LIB == 'pynput':
+        pynput_listener = Listener(on_press=on_pynput_press, on_release=on_pynput_release)
+        pynput_listener.start()
+        print("[INFO] Listener pynput démarré")
 
     root_window.after(100, check_queue)
     root_window.mainloop()
+
+    # Arrêter le listener pynput si actif
+    if KEYBOARD_LIB == 'pynput' and pynput_listener:
+        pynput_listener.stop()
 
     print("\n[INFO] Script arrêté.")
 
